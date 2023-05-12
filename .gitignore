@@ -1,0 +1,14 @@
+/bin/
+/build/
+/.vscode/
+
+/backup/
+MERGED.jpg
+# *.jpg
+# *.png
+
+# !/data/*.jpg
+
+
+
+
