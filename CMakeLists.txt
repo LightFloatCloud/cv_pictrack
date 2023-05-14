@@ -4,12 +4,16 @@ cmake_minimum_required(VERSION 3.10)
 
 project(CV_pictrack)
 
+
 if(CMAKE_HOST_WIN32)
-    message(STATUS "System is WIN32, path of opencv need to set manually.")
+    message(STATUS "System is WIN32, path need to set manually.")
+    message(STATUS "CMAKE_SOURCE_DIR = ${CMAKE_SOURCE_DIR}")
     # set(OpenCV_DIR "E:/Lib/opencv3/build/x64/vc14/lib")
     # set(OpenCV_DIR "E:/Lib/opencv3/build/x64/vc15/lib")
     # set(OpenCV_DIR "E:/Lib/opencv4/opencv/build/x64/vc16/lib")
     set(OpenCV_DIR "E:/Lib/opencv4/opencv/build/x64/mingw")
+    set(Eigen3_DIR  "${CMAKE_SOURCE_DIR}/Thirdparty/Eigen3/share/eigen3/cmake")
+    set(g2o_DIR  "E:/Lib/g2o/G2O-Windows/g2o/lib/cmake/g2o")
 endif()
 
 set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O2 -Wall -fexec-charset=GBK")
@@ -28,6 +32,14 @@ message(STATUS "  libraries: ${OpenCV_LIBS}")
 message(STATUS "  libraries path: ${}")
 message(STATUS "  include path: ${OpenCV_INCLUDE_DIRS}")
 
+find_package(Eigen3 3.1.0 REQUIRED)
+message(STATUS "Eigen3 library status:")
+message(STATUS "  version: ${Eigen3_VERSION}")
+message(STATUS "  libraries: ${Eigen3_LIBS}")
+message(STATUS "  libraries path: ${}")
+message(STATUS "  include path: ${Eigen3_INCLUDE_DIRS}")
+
+find_package(g2o REQUIRED)
 
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 include_directories( include )
