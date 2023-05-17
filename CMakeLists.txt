@@ -40,11 +40,23 @@ message(STATUS "  libraries path: ${}")
 message(STATUS "  include path: ${Eigen3_INCLUDE_DIRS}")
 
 find_package(g2o REQUIRED)
+message(STATUS "g2o library status:")
+message(STATUS "  version: ${g2o_VERSION}")
+message(STATUS "  libraries: ${g2o_LIBS}")
+message(STATUS "  libraries path: ${}")
+message(STATUS "  include path: ${g2o_INCLUDE_DIRS}")
+
 
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 include_directories( include )
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
-add_executable(${PROJECT_NAME} src/main.cpp src/fileload.cpp)
+add_executable(${PROJECT_NAME} 
+src/main.cpp 
+src/fileload.cpp 
+src/cv_method.cpp 
+src/ORBextractor.cc
+# src/ORBmatcher.cc
+)
 target_link_libraries( ${PROJECT_NAME} ${OpenCV_LIBS} )
 
