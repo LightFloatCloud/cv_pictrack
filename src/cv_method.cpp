@@ -32,9 +32,9 @@ cv::Mat calculate_H(const cv::Mat &image1, const cv::Mat &image2 , double thres)
     vector<DMatch> matches;
     matcher->match(descriptors1, descriptors2, matches);
 
-    Mat img1_withkp, img2_withkp;
-    drawKeypoints( image1, keypoints1, img1_withkp );
-    drawKeypoints( image2, keypoints2, img2_withkp );
+    // Mat img1_withkp, img2_withkp;
+    // drawKeypoints( image1, keypoints1, img1_withkp );
+    // drawKeypoints( image2, keypoints2, img2_withkp );
 
     //imshow("pic_show",imshow_parallel(img1_withkp,img2_withkp));
 
@@ -78,11 +78,44 @@ cv::Mat calculate_H(const cv::Mat &image1, const cv::Mat &image2 , double thres)
     return H;
 }
 
-cv::Mat calculate_H(const cv::Mat &image1, int nFeatures, float fScaleFactor, int nLevels, int fIniThFAST, int fMinThFAST)
-{
+cv::Mat calculate_H(const cv::Mat &image1, const cv::Mat &image2, const string &strSettingPath)
+{ 
+    mImGray = image1;
+
+    // Step 1 ：将彩色图像转为灰度图像
+    //若图片是3、4通道的，还需要转化成灰度图
+    if(mImGray.channels()==3)
+    {
+        if(mbRGB)
+            cvtColor(mImGray,mImGray,CV_RGB2GRAY);
+        else
+            cvtColor(mImGray,mImGray,CV_BGR2GRAY);
+    }
+    else if(mImGray.channels()==4)
+    {
+        if(mbRGB)
+            cvtColor(mImGray,mImGray,CV_RGBA2GRAY);
+        else
+            cvtColor(mImGray,mImGray,CV_BGRA2GRAY);
+    }
+
+
+
+
     // Step 1 从配置文件中加载相机参数
-    const string strSettingPath = "config.yaml";
+    // const string strSettingPath = "config.yaml";
     cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
+
+    // 每一帧提取的特征点数 1000
+    int nFeatures = fSettings["ORBextractor.nFeatures"];
+    // 图像建立金字塔时的变化尺度 1.2
+    float fScaleFactor = fSettings["ORBextractor.scaleFactor"];
+    // 尺度金字塔的层数 8
+    int nLevels = fSettings["ORBextractor.nLevels"];
+    // 提取fast特征点的默认阈值 20
+    int fIniThFAST = fSettings["ORBextractor.iniThFAST"];
+    // 如果默认阈值提取不出足够fast特征点，则使用最小阈值 8
+    int fMinThFAST = fSettings["ORBextractor.minThFAST"];
 
     using namespace ORB_SLAM2;
     ORBextractor* mpORBextractorLeft;
@@ -94,15 +127,64 @@ cv::Mat calculate_H(const cv::Mat &image1, int nFeatures, float fScaleFactor, in
         fIniThFAST,
         fMinThFAST);
     
-    std::vector<cv::KeyPoint> mvKeys_1;
-    cv::Mat mDescriptors_1;
+
+
+    std::vector<cv::KeyPoint> mvKeys_1, mvKeys_2;
+    cv::Mat mDescriptors_1, mDescriptors_2;
 
     (*mpORBextractorLeft)(  image1,				//待提取特征点的图像
                             cv::Mat(),		//掩摸图像, 实际没有用到
                             mvKeys_1,			//输出变量，用于保存提取后的特征点
                             mDescriptors_1);	//输出变量，用于保存特征点的描述子
 
-    return mDescriptors_1;
+    (*mpORBextractorLeft)(  image2,				//待提取特征点的图像
+                            cv::Mat(),		//掩摸图像, 实际没有用到
+                            mvKeys_2,			//输出变量，用于保存提取后的特征点
+                            mDescriptors_2);	//输出变量，用于保存特征点的描述子
+
+    // 匹配描述符
+    Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create("BruteForce-Hamming");
+    vector<DMatch> matches;
+    matcher->match(mDescriptors_1, mDescriptors_2, matches);
+
+
+    // 筛选最佳匹配
+    double minDist = 100.0;
+    for (int i = 0; i < mDescriptors_1.rows; i++) {
+        double dist = matches[i].distance;
+        if (dist < minDist) {
+            minDist = dist;
+        }
+    }
+
+    double thres = fSettings["ORBextractor.matchthres"];
+    vector<DMatch> bestMatches;
+    for (int i = 0; i < mDescriptors_1.rows; i++) {
+        if (matches[i].distance < max(3 * minDist, thres)) {
+            bestMatches.push_back(matches[i]);
+        }
+    }
+
+    Mat img_matches;
+    // drawMatches( image1, keypoints1, image2, keypoints2, matches, img_matches );
+    // imshow("Matches", img_matches );
+    // waitKey(0);
+
+    drawMatches( image1, mvKeys_1, image2, mvKeys_2, bestMatches, img_matches );
+    imshow("Matches", img_matches );
+    waitKey(0);
+
+    // 计算变换矩阵
+    vector<Point2f> points1, points2;
+    for (size_t i = 0; i < bestMatches.size(); i++) {
+        points1.push_back(mvKeys_1[bestMatches[i].queryIdx].pt);
+        points2.push_back(mvKeys_2[bestMatches[i].trainIdx].pt);
+    }
+    Mat H = findHomography(points2, points1, RANSAC);
+
+    return H;
+
+
 }
 
 cv::Mat picmerge(const cv::Mat &image1, const cv::Mat &image2, cv::Mat H ,cv::Mat &Trans)

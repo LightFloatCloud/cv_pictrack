@@ -5,13 +5,14 @@
 #include "fileload.h"
 #include "cv_method.h"
 
-//#include "opencv2/opencv.hpp"
+#include "opencv2/opencv.hpp"
 
-#include "opencv2/core/core.hpp"
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/features2d/features2d.hpp"
-#include "opencv2/calib3d/calib3d.hpp"
+// #include "opencv2/core/core.hpp"
+// #include "opencv2/highgui/highgui.hpp"
+// #include "opencv2/imgproc/imgproc.hpp"
+// #include "opencv2/features2d/features2d.hpp"
+// #include "opencv2/calib3d/calib3d.hpp"
+
 //#include "opencv2/xfeatures2d.hpp"
 
 
@@ -40,8 +41,14 @@ int main(int argc, const char * argv[])
     const char *file_path = argv[0];
     cout<<file_path<<endl;
 
+    std::string strSettingPath = "../src/config.yaml";
+    cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
+
+    string img_path = fSettings["image.path"];
+    string img_suffix = fSettings["image.suffix"];
     std::vector<std::string> imgpath_list;
-    LoadFileList("../data", ".jpg", imgpath_list);
+    LoadFileList(img_path, img_suffix, imgpath_list);
+    // LoadFileList("../data", ".jpg", imgpath_list);
     
     Mat img_merged = cv::imread("../data/" + imgpath_list.front(),  cv::IMREAD_COLOR);
     Mat image_last = img_merged;
@@ -50,7 +57,7 @@ int main(int argc, const char * argv[])
     for(auto imgpath=imgpath_list.begin()+1; imgpath!=imgpath_list.end() ;imgpath++)
     {
         Mat image = cv::imread("../data/" + *imgpath, cv::IMREAD_COLOR);
-        Mat H = calculate_H(image_last, image);
+Mat H = calculate_H(image_last, image, strSettingPath);
         //T = T*H;
         T = T_offset * H; 
         cout << "H:" <<endl<< H <<endl;

@@ -16,6 +16,7 @@
 cv::Mat imshow_parallel(const cv::Mat &image1, const cv::Mat &image2);
 
 cv::Mat calculate_H(const cv::Mat &image1, const cv::Mat &image2 , double thres = 20);
+cv::Mat calculate_H(const cv::Mat &image1, const cv::Mat &image2, const std::string &strSettingPath = "../src/config.yaml");
 
 cv::Mat picmerge(const cv::Mat &image1, const cv::Mat &image2, cv::Mat H ,cv::Mat &Trans);
 
