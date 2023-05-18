@@ -80,23 +80,27 @@ cv::Mat calculate_H(const cv::Mat &image1, const cv::Mat &image2 , double thres)
 
 cv::Mat calculate_H(const cv::Mat &image1, const cv::Mat &image2, const string &strSettingPath)
 { 
-    mImGray = image1;
+    cv::Mat mImGray1 = image1;
+    cv::Mat mImGray2 = image2;
 
     // Step 1 ：将彩色图像转为灰度图像
     //若图片是3、4通道的，还需要转化成灰度图
-    if(mImGray.channels()==3)
+    if(mImGray1.channels()==3)
     {
-        if(mbRGB)
-            cvtColor(mImGray,mImGray,CV_RGB2GRAY);
-        else
-            cvtColor(mImGray,mImGray,CV_BGR2GRAY);
+        cvtColor(mImGray1,mImGray1,COLOR_BGR2GRAY);
     }
-    else if(mImGray.channels()==4)
+    else if(mImGray1.channels()==4)
     {
-        if(mbRGB)
-            cvtColor(mImGray,mImGray,CV_RGBA2GRAY);
-        else
-            cvtColor(mImGray,mImGray,CV_BGRA2GRAY);
+        cvtColor(mImGray1,mImGray1,COLOR_BGRA2GRAY);
+    }
+
+    if(mImGray2.channels()==3)
+    {
+        cvtColor(mImGray2,mImGray2,COLOR_BGR2GRAY);
+    }
+    else if(mImGray2.channels()==4)
+    {
+        cvtColor(mImGray2,mImGray2,COLOR_BGRA2GRAY);
     }
 
 
@@ -132,12 +136,12 @@ cv::Mat calculate_H(const cv::Mat &image1, const cv::Mat &image2, const string &
     std::vector<cv::KeyPoint> mvKeys_1, mvKeys_2;
     cv::Mat mDescriptors_1, mDescriptors_2;
 
-    (*mpORBextractorLeft)(  image1,				//待提取特征点的图像
+    (*mpORBextractorLeft)(  mImGray1,				//待提取特征点的图像
                             cv::Mat(),		//掩摸图像, 实际没有用到
                             mvKeys_1,			//输出变量，用于保存提取后的特征点
                             mDescriptors_1);	//输出变量，用于保存特征点的描述子
 
-    (*mpORBextractorLeft)(  image2,				//待提取特征点的图像
+    (*mpORBextractorLeft)(  mImGray2,				//待提取特征点的图像
                             cv::Mat(),		//掩摸图像, 实际没有用到
                             mvKeys_2,			//输出变量，用于保存提取后的特征点
                             mDescriptors_2);	//输出变量，用于保存特征点的描述子
